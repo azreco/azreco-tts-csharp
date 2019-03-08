@@ -1,4 +1,4 @@
-# AzReco Speech Recognition API C# example
+# AzReco Text To Speech API C# example
 Example project in c# .Net to help you integrate with our text-to-speech API.
 
 This is an example c# .Net project for uploading text file and saving the audio into a .wav file.
