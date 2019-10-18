@@ -10,7 +10,8 @@ public class Synthesizer
     private string token = null;
     private string lang = null;
 
-    private string apiURL = "http://api.azreco.az/synthesize";
+    private string apiURLFile = "http://api.azreco.az/synthesize";
+    private string apiURLText = "http://api.azreco.az/synthesize/text";
 
     public Synthesizer(string userId, string token, string lang) {
         this.userId = userId;
@@ -43,7 +44,7 @@ public class Synthesizer
             formData.Add(tokenContent, "api_token");
             formData.Add(langContent, "lang");
             formData.Add(streamContent, "file", fileName);
-            var response = await client.PostAsync(apiURL, formData);
+            var response = await client.PostAsync(apiURLFile, formData);
             if(!response.IsSuccessStatusCode) {
 				if (response.StatusCode == HttpStatusCode.BadRequest)
 				{
@@ -54,6 +55,38 @@ public class Synthesizer
 				{
 					Console.WriteLine(response.ReasonPhrase);
 				}
+                return null;
+            }
+            return await response.Content.ReadAsByteArrayAsync();
+        }
+    }
+
+    public async Task<byte[]> SynthesizeText(string text)
+    {
+        HttpContent idContent = new StringContent(userId);
+        HttpContent tokenContent = new StringContent(token);
+        HttpContent langContent = new StringContent(lang);
+        HttpContent textContent = new StringContent(text);
+        // Making multipart form content and posting it to the server
+        using (var client = new HttpClient())
+        using (var formData = new MultipartFormDataContent())
+        {
+            formData.Add(idContent, "api_id");
+            formData.Add(tokenContent, "api_token");
+            formData.Add(langContent, "lang");
+            formData.Add(textContent, "text");
+            var response = await client.PostAsync(apiURLText, formData);
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    string error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine("Text-to-speech process failed: " + error);
+                }
+                else
+                {
+                    Console.WriteLine(response.ReasonPhrase);
+                }
                 return null;
             }
             return await response.Content.ReadAsByteArrayAsync();
