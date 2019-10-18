@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +10,10 @@ namespace Client
     {
         public class Options
         {
-            [Option('t', "text", Required = true, HelpText = "Text file to be processed")]
+            [Option("input-type", Required = true, HelpText = "Type of input. Must be one of 'text' or 'file'.")]
+            public string InputType { get; set; }
+
+            [Option('t', "text", Required = true, HelpText = "Text or text contained file to be processed")]
             public string TextFile { get; set; }
 
             [Option('o', "output", Required = true, HelpText = "Output wave filename")]
@@ -27,21 +30,23 @@ namespace Client
         }
         static void Main(string[] args)
         {
-            string textFile = null;
+            string text = null;
             string output = null;
             string userId = null;
             string token = null;
             string lang = null;
+            string inputType = null;
             try
             {
                 // Parsing commandline arguments
                 Parser.Default.ParseArguments<Options>(args)
                     .WithParsed<Options>(opts => {
-                        textFile = opts.TextFile;
+                        text = opts.TextFile;
                         output = opts.Output;
                         userId = opts.UserId;
                         token = opts.ApiToken;
                         lang = opts.Language;
+                        inputType = opts.InputType;
                     });
             }
             catch (Exception ex)
@@ -50,7 +55,15 @@ namespace Client
                 return;
             }
             Synthesizer synthesizer = new Synthesizer(userId, token, lang);
-            Task<byte[]> resultTask = synthesizer.Synthesize(textFile);
+            Task<byte[]> resultTask = null;
+            if (inputType == "text")
+            {
+                resultTask = synthesizer.SynthesizeText(text);
+            }
+            else
+            {
+                resultTask = synthesizer.Synthesize(text);
+            }
             if (resultTask == null)
             {
                 Console.WriteLine("Text-to-speech process failed.");
