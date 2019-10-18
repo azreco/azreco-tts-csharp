@@ -29,7 +29,9 @@ dotnet add package CommandLineParser --version 2.4.3
 In Windows OS native .Net environment:
 
 client.exe --input-type file -t text\\example-tr.txt -l tr-TR -i api_user_id -k api_token -o example-tr.wav  
+
 or
+
 client.exe --input-type text -t "any text" -l tr-TR -i api_user_id -k api_token -o example-tr.wav 
 
 In .Net Core environment:
