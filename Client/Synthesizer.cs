@@ -12,6 +12,7 @@ public class Synthesizer
 
     private string apiURLFile = "http://api.azreco.az/synthesize";
     private string apiURLText = "http://api.azreco.az/synthesize/text";
+    private string apiURLVoices = "http://api.azreco.az/voices";
 
     public Synthesizer(string userId, string token, string lang) {
         this.userId = userId;
@@ -19,7 +20,7 @@ public class Synthesizer
         this.lang = lang;
     }
 
-    public async Task<byte[]> Synthesize(string textFile) {
+    public async Task<byte[]> Synthesize(string textFile, string ttsId) {
         HttpContent idContent = new StringContent(userId);
         HttpContent tokenContent = new StringContent(token); 
         HttpContent langContent = new StringContent(lang);
@@ -44,6 +45,10 @@ public class Synthesizer
             formData.Add(tokenContent, "api_token");
             formData.Add(langContent, "lang");
             formData.Add(streamContent, "file", fileName);
+            if (!(ttsId == null || ttsId.Length == 0))
+            {
+                formData.Add(new StringContent(ttsId), "tts_id");
+            }
             var response = await client.PostAsync(apiURLFile, formData);
             if(!response.IsSuccessStatusCode) {
 				if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -61,7 +66,7 @@ public class Synthesizer
         }
     }
 
-    public async Task<byte[]> SynthesizeText(string text)
+    public async Task<byte[]> SynthesizeText(string text, string ttsId)
     {
         HttpContent idContent = new StringContent(userId);
         HttpContent tokenContent = new StringContent(token);
@@ -75,6 +80,10 @@ public class Synthesizer
             formData.Add(tokenContent, "api_token");
             formData.Add(langContent, "lang");
             formData.Add(textContent, "text");
+            if(!(ttsId == null || ttsId.Length == 0))
+            {
+                formData.Add(new StringContent(ttsId), "tts_id");
+            }
             var response = await client.PostAsync(apiURLText, formData);
             if (!response.IsSuccessStatusCode)
             {
@@ -90,6 +99,27 @@ public class Synthesizer
                 return null;
             }
             return await response.Content.ReadAsByteArrayAsync();
+        }
+    }
+
+    public async Task<string> GetVoices()
+    {
+        using (var client = new HttpClient()) { 
+            var response = await client.GetAsync(apiURLVoices + "?api_id=" + userId + "&api_token=" + token);
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    string error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine("Getting voices failed: " + error);
+                }
+                else
+                {
+                    Console.WriteLine(response.ReasonPhrase);
+                }
+                return null;
+            }
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

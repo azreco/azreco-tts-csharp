@@ -27,6 +27,9 @@ namespace Client
 
             [Option('l', "lang", Required = true, HelpText = "Code of language to use (e.g., az-AZ, tr-TR)")]
             public string Language { get; set; }
+
+            [Option("tts-id", Required = false, HelpText = "Identification of voice for given language. To see identification of voices call getVoices() method of Synthesizer class.")]
+            public string TTSId { get; set; }
         }
         static void Main(string[] args)
         {
@@ -36,6 +39,7 @@ namespace Client
             string token = null;
             string lang = null;
             string inputType = null;
+            string ttsId = null;
             try
             {
                 // Parsing commandline arguments
@@ -47,6 +51,7 @@ namespace Client
                         token = opts.ApiToken;
                         lang = opts.Language;
                         inputType = opts.InputType;
+                        ttsId = opts.TTSId;
                     });
             }
             catch (Exception ex)
@@ -55,14 +60,26 @@ namespace Client
                 return;
             }
             Synthesizer synthesizer = new Synthesizer(userId, token, lang);
+            Task<string> voicesTask = synthesizer.GetVoices();
+            if(voicesTask != null)
+            {
+                if(!(voicesTask.IsCanceled || voicesTask.IsFaulted))
+                {
+                    if(!voicesTask.IsCompleted)
+                    {
+                        voicesTask.Wait();
+                    }
+                    Console.WriteLine(voicesTask.Result);
+                }
+            }
             Task<byte[]> resultTask = null;
             if (inputType == "text")
             {
-                resultTask = synthesizer.SynthesizeText(text);
+                resultTask = synthesizer.SynthesizeText(text, ttsId);
             }
             else
             {
-                resultTask = synthesizer.Synthesize(text);
+                resultTask = synthesizer.Synthesize(text, ttsId);
             }
             if (resultTask == null)
             {
